@@ -1,0 +1,21 @@
+Aula 01 — Introdução com Pandas/Seaborn: shape, head, dtypes, isnull().sum(), média/mediana/moda e histograma automático (df.hist()). Dataset: Titanic.
+
+Aula 02 — Estruturas de dados em Python: Listas (criar, indexar, fatiar, append, insert, pop, remove, sort, reverse, count, range, laço for) + Dicionário (keys(), items()) + Tupla e Set.
+
+Aula 03 — Estatística Descritiva: média, mediana, moda, amplitude, desvio padrão, variância e quartis (pacote statistics), aplicados também em colunas filtradas de DataFrame. Datasets: Tips e Titanic.
+
+Aula 04 — NumPy / Arrays: 04a (criação de arrays, arange), 04b (Arrays — Parte II), 04c (operações com arrays: indexação, fatiamento, seleção condicional, reshape).
+
+Aula 05 — Probabilidade: espaço amostral, eventos independentes/dependentes/exclusivos, regra da adição e da multiplicação, simulação com dados (np.random.randint) e exercícios de probabilidade.
+
+Aula 06 — Distribuição Binomial: np.random.binomial, binom.pmf/cdf/sf/mean/var/std (scipy.stats).
+
+Aula 07 — Distribuição de Poisson: np.random.poisson, poisson.pmf/cdf/sf/ppf/mean/var/std (scipy.stats).
+
+Aula 08 — Pandas: Series e DataFrame — criação de DataFrame, "Dataset to DataFrame", manipulação de colunas e manipulação de linhas. Dataset: Piece_Dim.csv.
+
+Aula 09 — Gráficos I: 09a — gráfico de pizza e pizza lado a lado (ebola.csv, exercício com survey2021.csv); 09b — gráficos de barra e área empilhados (washingtonDCCrime.csv, exercícios com GDP_by_Country.csv); 09c — gráfico de dispersão (bloodpressure.csv).
+
+Aula 10 — Gráficos II: 10a — gráfico de linhas (lifeExpectancy.csv); 10b — histogramas com Seaborn (CPI_2014.csv); 10c — gráfico de barras (ebola.csv, migrants.csv); 10-exerc — exercícios de fixação (CPI_2014.csv).
+
+Aula 11 — Crosstab e GroupBy: tabulação cruzada (simples, agregando valores, normalização, visualização, função de agregação) (dataset taxis) + agrupamento com groupby (dataset nobel_prize.csv).
