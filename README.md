@@ -47,6 +47,13 @@ poisson.cdf(...) # Poisson
 norm.pdf(...)    # Normal
 expon.sf(...)    # Exponencial
 ```
+Também é possível gerar amostras com o numpy:
+
+```python
+mil_lancamentos = np.random.binomial(2,0.5,1000)
+fila = np.random.poisson(3.6,1000)
+
+```
 
 Todas seguem o mesmo padrão de nomes de métodos (`pmf`/`pdf`, `cdf`, `sf` etc.).
 
@@ -290,15 +297,17 @@ df = pd.DataFrame({
 ```python
 df = pd.read_csv("arquivo.csv", encoding="latin-1")  # encoding comum em PT
 
-df.shape
-df.head()
-df.info()
-df.describe()
-df.columns
-df.dtypes
-df["Coluna"].unique()
-df["Coluna"].value_counts()
-df.isnull().sum()
+df.shape                  # Mostra o número de linhas e colunas
+df.head()                 # Mostra as 5 primeiras linhas
+df.info()                 # Mostra informações gerais sobre o DataFrame
+df.describe()             # Mostra estatísticas descritivas das colunas numéricas
+df.columns                # Mostra os nomes das colunas
+df.dtypes                 # Mostra o tipo de dado de cada coluna
+df["Coluna"].unique()     # Mostra os valores únicos da coluna
+df["Coluna"].value_counts() # Conta quantas vezes cada valor aparece
+df.isnull().sum()         # Conta os valores ausentes (NaN) em cada coluna
+df.rename(columns={'Close': 'Close TSLA'}, inplace=True)
+
 ```
 
 ### Seleção: `loc` × `iloc`
@@ -334,6 +343,9 @@ df.loc[['Item-1', 'Item-5'],['Comprimento', 'Largura']]
 ```python
 # Filtro simples
 df[df["Idade"] >= 18]
+# Filtro + coluna específica
+dataset_titanic[dataset_titanic['sex'] =='female']['age'].median()
+df[['Comprimento', 'Largura']].head() #duas colunas, mas sem loc
 
 # E / OU
 df[(df["Operador"] == "Op-1") & (df["Comprimento"] > 105)]
@@ -351,6 +363,7 @@ df["Volume"] = df["Comp"] * df["Larg"] * df["Alt"]   # nova coluna
 df = df.drop("Volume", axis=1)                       # remove coluna
 df = df.drop(0, axis=0)                              # remove linha
 df.sort_values(by="Salario", ascending=False)
+filtro = df['LanguageHaveWorkedWith'].str.contains('palavra aqui'), na=False) 
 ```
 
 ---
@@ -370,7 +383,7 @@ plt.axis("equal")
 plt.show()
 ```
 
-### Barras — três formas de fazer o mesmo gráfico
+### Barras — várias formas de fazer o mesmo gráfico
 
 ```python
 # 1) Matplotlib / Pandas
@@ -381,13 +394,36 @@ df.plot(kind="barh", x="Pais", y="PIB")
 
 # 3) Seaborn (melhor quando tem hue)
 sns.barplot(data=df, x="Tipo", y="Mortes", hue="Pais", errorbar=None)
+
+#com countplot
+sns.countplot(x='class', hue='alive', data=df)
+
+dados = np.random.randint(1,7,6000)
+sns.countplot(x=dados)
 ```
+| Gráfico | Para que serve? | Eixos necessários | O que o Eixo Y representa por padrão? |
+| :--- | :--- | :--- | :--- |
+| **`sns.barplot`** | Compara categorias com um valor numérico | `x` (Categoria) e `y` (Número) | Média/Agregação de um valor da base |
+| **`sns.countplot`** | Conta quantas vezes cada categoria aparece | Apenas `x` (ou apenas `y`) | Frequência/Quantidade de linhas (`count`) |
 
 **Empilhada a partir de crosstab:**
 
 ```python
+#região no x, ano no y
 tabela = pd.crosstab(df["Regiao"], df["Ano"], values=df["Total"], aggfunc="sum")
 tabela.plot(kind="bar", stacked=True)
+
+
+#o hue vai ser o ano o eixo x vai ser a rtegião e o y vai ser a soma
+df3 = pd.crosstab(
+                df2['Region_of_Incident'],
+                  df2['Reported_Year'], 
+                    values=df2['Total_Dead_and_Missing'],
+                    aggfunc='sum'
+                  )
+
+df3.plot(kind='bar', stacked=False)
+
 ```
 
 ### Área Empilhada (`kind="area"`)
@@ -396,6 +432,13 @@ Mostra magnitude cumulativa ao longo do tempo.
 
 ```python
 df.set_index("Ano")[["Roubo", "Homicidio", "Furto"]].plot(kind="area", stacked=True)
+summary.plot(kind='area', stacked=True)
+
+#ano no eixo x, qtd crime no y e as taxas empilhadas (sendo que cada cor vai representar um crime)
+summary = pd.crosstab(df['Year'], df['Crime'], values=df['Rate'], aggfunc=np.sum)
+summary.plot(kind='area', stacked=True)
+
+
 ```
 
 
@@ -426,7 +469,8 @@ sns.lineplot(data=df, x="Ano", y="Taxa_Crime", hue="Categoria")
 ### Dispersão + Regressão
 
 ```python
-sns.regplot(data=df, x="Idade", y="Pressao_Arterial", scatter_kws={"alpha": 0.6})
+#fit_reg é a opção da reta
+sns.regplot(data=df, x="Idade", y="Pressao_Arterial", scatter_kws={"alpha": 0.6}, fit_reg=True)
 ```
 
 ### Histograma: `histplot` × `displot`
@@ -437,6 +481,9 @@ sns.regplot(data=df, x="Idade", y="Pressao_Arterial", scatter_kws={"alpha": 0.6}
 | `sns.displot` | Figura completa de distribuição | Gráfico único e rápido; cria sua própria figura |
 
 ```python
+# com .hist
+df.hist('age', bins=8,figsize=(8,8))
+
 # histplot (mais controle)
 sns.histplot(df["CPI"], bins=15, kde=True)
 
@@ -451,6 +498,19 @@ fig, axes = plt.subplots(1, 2, figsize=(12, 5))
 sns.histplot(df[df["Regiao"]=="Europe"]["CPI"], bins=15, kde=True, ax=axes[0])
 sns.histplot(df[df["Regiao"]=="Africa"]["CPI"], bins=15, kde=True, ax=axes[1])
 plt.tight_layout()
+
+#USANDO O SUPLOT SEPARADO
+plt.subplot(1,2,1)
+plt.pie(sizes_sierra, labels=labels_sierra,autopct='%1.1f%%', shadow=True, startangle=90)
+plt.title('Pie chart of Ebola deaths in Sierra Leone')
+
+plt.subplot(1,2,2)
+plt.pie(sizes_guinea, labels=labels_guinea,autopct='%1.1f%%', shadow=True, startangle=90)
+plt.title('Pie chart of Ebola deaths in Guinea')
+
+plt.tight_layout()
+plt.show()
+
 ```
 
 ---
@@ -486,15 +546,23 @@ ct_mean = pd.crosstab(df["gender"], df["education_level"],
 # Com totais
 ct = pd.crosstab(df["gender"], df["education_level"], margins=True)
 
+# agrupe por ano os crimes,  olhando taxas somadas
+summary = pd.crosstab(df['Year'], df['Crime'], values=df['Rate'], aggfunc=np.sum)
+
 # Normalização
 pd.crosstab(..., normalize="index")   # % dentro de cada linha
 pd.crosstab(..., normalize="columns") # % dentro de cada coluna
 pd.crosstab(..., normalize="all")     # % do total geral
+pd.crosstab(..., normalize=True) 
+
+#nomear índices
+pd.crosstab(df['pickup_borough'], df['payment'], rownames=['Zone'], colnames=['Payment Method'] )
 ```
 
 **Heatmap (melhor visualização de crosstab):**
 
 ```python
+#annot é para colocar todas as informações
 sns.heatmap(ct, annot=True, cmap="coolwarm", fmt="g")
 ```
 
