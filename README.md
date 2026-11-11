@@ -1,689 +1,197 @@
-# 📘 Guia de Consulta Rápida — Métodos Matemáticos para Análise de Dados
+# Guia de Estudos para Prova: Teorema Central do Limite e Testes de Hipótese
 
-Resumo-ensino prático e direto para prova. Cada seção explica **o que é**, **para que serve** e **como usar**, com a sintaxe essencial.
-
----
-
-## 📑 Índice por Aula
-
-| Aula | Conteúdo |
-|------|----------|
-| **Aula 1** | [Introdução e Importações](#aula-1-introdução-e-importações) |
-| **Aula 2** | [Listas em Python](#aula-2-listas-em-python) |
-| **Aula 3** | [Média, Desvio Padrão e Boxplot](#aula-3-média-desvio-padrão-e-boxplot) |
-| **Aula 4** | [Arrays, Matrizes e Operações (NumPy)](#aula-4-arrays-matrizes-e-operações-numpy) |
-| **Aula 5** | [Probabilidade — Conceitos Básicos](#aula-5-probabilidade--conceitos-básicos) |
-| **Aula 6** | [Distribuição Binomial](#aula-6-distribuição-binomial) |
-| **Aula 7** | [Distribuição de Poisson](#aula-7-distribuição-de-poisson) |
-| **Aula 8** | [Series e DataFrames (Pandas)](#aula-8-series-e-dataframes-pandas) |
-| **Aula 9** | [Gráfico de Pizza, Barras e Área](#aula-9-gráfico-de-pizza-barras-e-área) |
-| **Aula 10** | [Linhas, Histogramas e Barras (Seaborn)](#aula-10-linhas-histogramas-e-barras-seaborn) |
-| **Aula 11** | [Crosstab e Groupby Avançado](#aula-11-crosstab-e-groupby-avançado) |
-| **Aula 12** | [Distribuição Normal](#aula-12-distribuição-normal) |
-| **Aula 13** | [Distribuição Exponencial](#aula-13-distribuição-exponencial) |
-| — | [Pegadinhas de Prova](#pegadinhas-e-erros-mais-comuns) |
+Este guia foi estruturado especificamente para revisão de prova. Ele consolida o **Teorema Central do Limite (TCL)**, o **Roteiro Universal em 6 Etapas** para testes de hipótese e a compilação completa de todos os testes estatísticos abordados no curso, utilizando notação simplificada em texto plano para facilitar a leitura.
 
 ---
 
-## Aula 1: Introdução e Importações
+## 1. O Teorema Central do Limite (TCL) como Fundação
 
-Sempre comece o código com as importações padrão. Elas trazem as ferramentas que usaremos em todas as aulas.
+A estatística inferencial utiliza amostras para tomar decisões sobre populações inteiras. O **Teorema Central do Limite (TCL)** é a garantia matemática que permite aplicar a Distribuição Normal na grande maioria dos testes práticos.
 
-```python
-import numpy as np                  # Arrays e operações matemáticas
-import pandas as pd                 # Tabelas (DataFrames) e Series
-import matplotlib.pyplot as plt     # Gráficos básicos
-import seaborn as sns               # Gráficos estatísticos
-import statistics as st             # Média, mediana, quantis etc.
-from scipy.stats import binom, poisson, norm, expon  # Distribuições
-```
+* **Conceito Chave**: Independentemente do formato da distribuição original da população (seja ela uniforme, assimétrica ou desconhecida), a **distribuição amostral das médias** se aproxima de uma **Distribuição Normal** conforme o tamanho da amostra cresce (regra prática: `n >= 30`).
+* **Média da Distribuição Amostral**: A média das médias amostrais é igual à média populacional original:
+  `Média(médias) = mu`
+* **Erro Padrão da Média (EP)**: É a medida da variabilidade das médias amostrais. Diminui à medida que o tamanho da amostra aumenta:
+  `Erro Padrão (EP) = sigma / sqrt(n)`  (quando o desvio padrão populacional sigma é conhecido)
+  `Erro Padrão (EP) = s / sqrt(n)`      (quando estimado pelo desvio padrão amostral s)
 
-**Por que importar assim?**  
-`scipy.stats` concentra várias distribuições. Depois de importar, você chama a função pelo nome da distribuição:
-
-```python
-binom.pmf(...)   # Binomial
-poisson.cdf(...) # Poisson
-norm.pdf(...)    # Normal
-expon.sf(...)    # Exponencial
-```
-Também é possível gerar amostras com o numpy:
-
-```python
-mil_lancamentos = np.random.binomial(2,0.5,1000)
-fila = np.random.poisson(3.6,1000)
-
-```
-
-Todas seguem o mesmo padrão de nomes de métodos (`pmf`/`pdf`, `cdf`, `sf` etc.).
+> **Por que isso importa na prova?**  
+> Graças ao TCL, podemos transformar qualquer média amostral em uma pontuação padronizada `Z` ou `t` e consultar tabelas de probabilidade para tomar decisões.
 
 ---
 
-## Aula 2: Listas em Python
+## 2. As 6 Etapas Universais do Teste de Hipótese
 
-Lista é a estrutura mais básica de dados em Python: uma sequência ordenada e mutável de elementos.
+Todos os testes paramétricos seguem rigorosamente a mesma sequência lógica de 6 passos.
 
-```python
-# Criação
-numeros = [10, 15, 12, 14, 15, 18, 20]
-nomes   = ["Ana", "Bruno", "Carlos"]
+### Passo 1: Definir a Hipótese Nula (Ho)
+É a afirmação inicial de igualdade ou ausência de efeito (o "status quo"). Sempre contém um sinal de igualdade (`=`, `<=`, ou `>=`).
+* Exemplo: `Ho: mu = 150 ml`
 
-# Acesso por índice (começa em 0)
-numeros[0]      # 10 (primeiro)
-numeros[-1]     # 20 (último)
-numeros[1:4]    # [15, 12, 14] (do índice 1 até o 3)
+### Passo 2: Definir a Hipótese Alternativa (Ha)
+É a hipótese de mudança, efeito ou diferença que o pesquisador quer comprovar. Nunca contém igualdade (`<>` para bicaudal, `>` ou `<` para unicaudal).
+* **Bilateral (Duas Caudas)**: `Ha: mu <> 150 ml` (Busca qualquer diferença)
+* **Unilateral à Direita (Uma Cauda)**: `Ha: mu > 150 ml` (Busca aumento)
+* **Unilateral à Esquerda (Uma Cauda)**: `Ha: mu < 150 ml` (Busca redução)
 
-# Operações úteis
-len(numeros)            # Quantidade de elementos
-numeros.append(25)      # Adiciona no final
-numeros.remove(15)      # Remove a primeira ocorrência do valor
-sum(numeros)            # Soma
-sorted(numeros)         # Nova lista ordenada (não altera a original)
-```
+### Passo 3: Definir a Probabilidade de Erro (Nível de Significância alpha)
+Fixa-se a tolerância para o **Erro Tipo I** antes de coletar os dados.
+* **Valores Padrão**: `alpha = 0,05` (5%), `alpha = 0,01` (1%), ou `alpha = 0,10` (10%).
+* **Nível de Confiança (C)**: `C = 1 - alpha` (Ex.: se `alpha = 0,05`, Confiança = 95%).
 
-**Quando usar lista?**  
-Para dados pequenos ou quando você ainda não precisa das vantagens de NumPy (velocidade e operações vetorizadas). Em análise de dados, listas viram arrays ou Series rapidamente.
+#### Matriz de Decisão: Erros Tipo I e Tipo II
+* **Erro Tipo I (alpha)**: Rejeitar `Ho` quando `Ho` é verdadeira (Alarme falso / Risco do Produtor).
+* **Erro Tipo II (beta)**: Falhar em rejeitar `Ho` quando `Ho` é falsa (Alarme não soa / Risco do Consumidor).
+* **Potência do Teste**: `1 - beta` (Capacidade do teste de rejeitar corretamente uma hipótese nula falsa).
 
----
+### Passo 4: Calcular a Estatística de Teste
+Aplica-se a fórmula do teste escolhido (calculando `Z_cal`, `t_cal`, `Chi2_cal` ou `F_cal`). A estatística mede a quantidade de erros padrões que os dados amostrais estão distantes do valor postulado em `Ho`.
 
-## Aula 3: Média, Desvio Padrão e Boxplot
+### Passo 5: Definir o Valor Crítico (ou p-valor)
+* **Abordagem pelo Valor Crítico**: Determina-se a fronteira na distribuição (`Z_crit`, `t_crit`, etc.) com base no `alpha` e nos graus de liberdade (`df`).
+* **Abordagem pelo p-valor**: 
+  * Se `p-valor < alpha` -> Rejeita-se `Ho`
+  * Se `p-valor >= alpha` -> Falha-se em rejeitar `Ho` (Confirma-se `Ho`)
 
-### Estatística Descritiva Básica
+  [explicar que o Z crítico é o ponto da curva onde o alpha começa a "contar"]
 
-```python
-dados = [10, 15, 12, 14, 15, 18, 20]
-
-media      = st.mean(dados)       # Média aritmética
-mediana    = st.median(dados)     # Valor central (Q2)
-moda       = st.mode(dados)       # Valor mais frequente
-variancia  = st.variance(dados)   # Variância amostral
-desvio     = st.stdev(dados)      # Desvio padrão amostral
-
-# Quartis — retorna lista [Q1, Q2, Q3]
-quartis = st.quantiles(dados)
-q1, q2, q3 = quartis[0], quartis[1], quartis[2]
-iqr = q3 - q1                     # Intervalo Interquartil
-```
-
-**Com Pandas (mais comum em DataFrames):**
-
-```python
-df['coluna'].mean()
-df['coluna'].median()
-df['coluna'].std()
-df['coluna'].quantile(0.25)   # Q1
-df['coluna'].quantile(0.75)   # Q3
-df['coluna'].describe()       # Resumo completo
-```
-
-### Boxplot — Anatomia e Uso
-
-O boxplot resume a distribuição com cinco números e destaca outliers.
-
-```
-       Outlier (*)
-          |
-    +-----+-----+       ← Limite superior (Q3 + 1,5·IQR)
-    |     |     |
-    +-----+-----+       ← Q3 (75%)
-    |           |
-    |-----------|       ← Mediana (Q2)
-    |           |
-    +-----+-----+       ← Q1 (25%)
-    |     |     |
-    +-----+-----+       ← Limite inferior (Q1 − 1,5·IQR)
-          |
-       Outlier (*)
-```
-
-- **IQR** = Q3 − Q1 → altura da caixa (50 % centrais dos dados).
-- **Outliers** = valores fora de [Q1 − 1,5·IQR ; Q3 + 1,5·IQR].
-
-**Sintaxe mais cobrada em prova (Pandas):**
-
-```python
-# Boxplot simples
-df.boxplot(column='total_bill')
-
-# Agrupado por categoria (column = numérico, by = categórico)
-df.boxplot(column='tip', by='day')
-plt.suptitle('')          # Remove o subtítulo automático feio do Pandas
-
-# Padrão de prova: filtrar ANTES
-generos = ['Animation', 'Comedy', 'Drama']
-df[df['genre'].isin(generos)].boxplot(column='score', by='genre')
-plt.suptitle('')
-```
-
-**Com Seaborn (mais flexível):**
-
-```python
-sns.boxplot(data=df, x='day', y='total_bill', hue='sex')
-```
+### Passo 6: Tomar a Decisão e Interpretar os Resultados
+Compara-se a estatística calculada com o valor crítico e conclui-se em termos práticos do problema (ex.: "Há evidência estatística de que a máquina está desregulada").
 
 ---
 
-## Aula 4: Arrays, Matrizes e Operações (NumPy)
+## 3. Tabela Comparativa de Todos os Testes do Curso
 
-Arrays NumPy são **homogêneos** (mesmo tipo) e permitem operações vetorizadas (muito mais rápidas que listas).
-
-```python
-# Criação
-arr  = np.array([1, 2, 3, 4, 5])
-mat  = np.arange(1, 10).reshape(3, 3)   # Matriz 3×3 de 1 a 9
-zeros = np.zeros((3, 3))
-ones  = np.ones((2, 4))
-espacado = np.linspace(0, 100, 5)       # 5 pontos igualmente espaçados
-
-# Indexação
-arr[0]        # primeiro
-arr[-1]       # último
-arr[1:4]      # do 1 ao 3
-mat[0, :]     # primeira linha
-mat[:, 1]     # segunda coluna
-
-# Operações
-arr.mean()
-arr.std()
-arr.sum()
-arr.max()
-arr.min()
-```
-
-**Diferença lista × array:**  
-Lista é genérica; array é otimizado para cálculo numérico e permite operações elemento a elemento sem laços.
+| Teste | Parâmetro Analisado | Condição Principal | Distribuição Usada | Estatística Calculada |
+| :--- | :--- | :--- | :--- | :--- |
+| **Teste Z (1 Amostra)** | Média (`mu`) | `sigma` conhecido OU `n >= 30` | Normal Padrão (`Z`) | `Z_cal` |
+| **Teste t (1 Amostra)** | Média (`mu`) | `sigma` desconhecido E `n < 30` | t de Student (`df = n - 1`) | `t_cal` |
+| **Teste de 1 Proporção** | Proporção (`p`) | Binomial com `n*p0 >= 10` e `n*(1-p0) >= 10` | Normal Padrão (`Z`) | `Z_cal` |
+| **Teste de 1 Variância** | Variância (`sigma^2`) | Dados com distribuição normal | Chi-Quadrado (`df = n - 1`) | `Chi2_cal` |
+| **Teste Z (2 Amostras)** | Comparação de Médias (`mu1 - mu2`) | Amostras independentes; `sigma1, sigma2` conhecidos OU `n1, n2 >= 30` | Normal Padrão (`Z`) | `Z_cal` |
+| **Teste t (2 Amostras)** | Comparação de Médias (`mu1 - mu2`) | Amostras independentes; `sigma` desconhecido e `n < 30` | t de Student (Variâncias Iguais ou Diferentes) | `t_cal` |
+| **Teste t Pareado** | Média das Diferenças (`mu_d`) | Amostras dependentes (Antes vs Depois no mesmo sujeito) | t de Student (`df = n - 1`) | `t_cal` |
+| **Teste de 2 Proporções** | Comparação de Proporções (`p1 - p2`) | Amostras binomiais independentes com min. 10 sucessos/falhas cada | Normal Padrão (`Z`) | `Z_cal` |
+| **Teste F (2 Variâncias)** | Comparação de Variâncias (`sigma1^2 / sigma2^2`) | Amostras independentes de populações normais | F de Snedecor (`df1 = n1-1`, `df2 = n2-1`) | `F_cal` |
+| **ANOVA (3+ Médias)** | Média de 3+ Grupos (`mu1 = mu2 = ... = muk`) | Amostras independentes de populações normais | F de Snedecor (`df_ext = k-1`, `df_int = N-k`) | `F_cal` |
 
 ---
 
-## Aula 5: Probabilidade — Conceitos Básicos
+## 4. Detalhamento Simplificado Teste a Teste
 
-**Probabilidade** mede a chance de um evento ocorrer (valor entre 0 e 1).
+### 4.1. Teste Z para 1 Amostra (Média)
+* **Hipóteses**: `Ho: mu = mu0` vs `Ha: mu <> mu0` (ou `>` / `<`)
+* **Condições**: População normal com desvio padrão `sigma` conhecido OU `n >= 30`.
+* **Fórmula**:
+  `Z_cal = (x_bar - mu0) / (sigma / sqrt(n))`
 
-- **Evento discreto**: contagem (número de sucessos, número de chamadas).
-- **Evento contínuo**: medida (altura, tempo, temperatura).
+### 4.2. Teste t de Student para 1 Amostra (Média)
+* **Hipóteses**: `Ho: mu = mu0` vs `Ha: mu <> mu0`
+* **Condições**: População normal com desvio padrão populacional desconhecido e amostra pequena (`n < 30`). Usa-se o desvio amostral `s`.
+* **Graus de Liberdade**: `df = n - 1`
 
-**Distribuições discretas** → usam **pmf** (Probability Mass Function) = probabilidade de um valor **exato**.  
-**Distribuições contínuas** → usam **pdf** (Probability Density Function) = densidade; a probabilidade de um intervalo é a **área** sob a curva.
+oq são: (explicar)
 
-Funções comuns (válidas para quase todas as distribuições do `scipy.stats`):
+falar que os testes que pedem graud de liberdade é por conta da  desvio padrão da população ($\sigma$) é desconhecido, por exmeplo: quando queremos saber se o desviopadr~qao mudou, mas e se não tivermos a média original?
 
-| Função | Significado |
-|--------|-------------|
-| `.pmf(k, ...)` ou `.pdf(x, ...)` | Probabilidade/densidade no ponto |
-| `.cdf(k, ...)` | P(X ≤ k) — acumulada até k |
-| `.sf(k, ...)`  | P(X > k) — sobrevivência (= 1 − cdf) |
-| `.mean(...)`   | Média teórica da distribuição |
-| `.var(...)`    | Variância teórica |
-| `.std(...)`    | Desvio padrão teórico |
+Veja o que acontece na prática com os 51 frascos:O 1º frasco deu $150{,}1\text{ ml}$ $\rightarrow$ tem a "liberdade" de dar qualquer valor.O 2º frasco deu $149{,}8\text{ ml}$ $\rightarrow$ também é um dado livre....O 50º frasco deu $150{,}4\text{ ml}$ $\rightarrow$ ainda é um dado livre.Chegando no 51º frasco, o volume dele não é mais uma informação independente sobre a variabilidade da fábrica. Por quê? Porque a soma de todos os 51 desvios em relação à média amostral tem que fechar exatamente em ZERO. O valor do 51º frasco já está totalmente "preso" aos outros 50.
+* **Fórmula**:
+  `t_cal = (x_bar - mu0) / (s / sqrt(n))`
 
----
+### 4.3. Teste para 1 Proporção Binomial
+* **Hipóteses**: `Ho: p = p0` vs `Ha: p <> p0`
+* **Condições**: Dados binários (sucesso/falha). Aproximação normal válida se `n * p0 >= 10` e `n * (1 - p0) >= 10`.
+* **Fórmula**:
+  `Z_cal = (p_hat - p0) / sqrt( (p0 * (1 - p0)) / n )`
+  *(onde `p_hat = sucessos / n`)*
 
-## Aula 6: Distribuição Binomial
+### 4.4. Teste Chi-Quadrado (Chi2) para 1 Variância
+* **Hipóteses**: `Ho: sigma^2 <= sigma0^2` vs `Ha: sigma^2 > sigma0^2`
+* **Condições**: Amostra aleatória de população com distribuição normal.
+* **Graus de Liberdade**: `df = n - 1`
+* **Fórmula**:
+  `Chi2_cal = (n - 1) * s^2 / sigma0^2`
 
-**O que é:**  
-Modelo para o número de **sucessos** em **n** tentativas independentes, cada uma com probabilidade **p** de sucesso.
+### 4.5. Teste Z e Teste t para 2 Amostras Independentes (Comparação de Médias)
+* **Hipóteses**: `Ho: mu1 = mu2` (ou `mu1 - mu2 = 0`) vs `Ha: mu1 <> mu2`
+* **Caso Z (sigmas conhecidos ou n1, n2 >= 30)**:
+  `Z_cal = (x_bar1 - x_bar2) / sqrt( (sigma1^2 / n1) + (sigma2^2 / n2) )`
 
-**Quando usar:**  
-- Lançamentos de moeda  
-- Aprovação/reprovação de alunos  
-- Defeitos em peças (sucesso = defeito)  
+* **Caso t com Variâncias Iguais (Homocedasticidade)**:
+  * Variância Combinada (`sp^2`):
+    `sp^2 = [ (n1 - 1) * s1^2 + (n2 - 1) * s2^2 ] / (n1 + n2 - 2)`
+  * Estatística de Teste:
+    `t_cal = (x_bar1 - x_bar2) / ( sp * sqrt( (1 / n1) + (1 / n2) ) )`
+  * Graus de Liberdade: `df = n1 + n2 - 2`
 
-**Parâmetros:** `n` (tentativas), `p` (probabilidade de sucesso).
+* **Caso t com Variâncias Diferentes (Heterocedasticidade)**:
+  `t_cal = (x_bar1 - x_bar2) / sqrt( (s1^2 / n1) + (s2^2 / n2) )`
+  *(Graus de liberdade ajustados pela fórmula de Welch)*
 
-```python
-from scipy.stats import binom
+### 4.6. Teste t Pareado (Amostras Dependentes)
+* **Aplicação**: Dados pareados do tipo "antes e depois" no mesmo indivíduo.
+* **Procedimento**: Calcula-se a diferença individual `d = Antes - Depois`.
+* **Hipóteses**: `Ho: mu_d = 0` vs `Ha: mu_d <> 0`
+* **Graus de Liberdade**: `df = n - 1`  *(onde n é o número de pares)*
+* **Fórmula**:
+  `t_cal = d_bar / (s_d / sqrt(n))`
+  *(onde `d_bar` é a média das diferenças e `s_d` é o desvio padrão das diferenças)*
 
-n, p = 10, 0.5
+### 4.7. Teste para 2 Proporções Binomiais
+* **Hipóteses**: `Ho: p1 - p2 = 0` vs `Ha: p1 - p2 <> 0`
+* **Condições**: Mínimo de 10 sucessos e 10 falhas em cada amostra.
+* **Proporção Agrupada (Pooled)**:
+  `p_bar = (n1 * p1_hat + n2 * p2_hat) / (n1 + n2)`
+* **Fórmula**:
+  `Z_cal = (p1_hat - p2_hat) / sqrt( p_bar * (1 - p_bar) * ( (1 / n1) + (1 / n2) ) )`
 
-binom.pmf(3, n, p)      # P(X = 3)  — exatamente 3 sucessos
-binom.cdf(3, n, p)      # P(X ≤ 3)  — no máximo 3
-binom.sf(3, n, p)       # P(X > 3)  — mais de 3
-binom.mean(n, p)        # média = n·p
-binom.var(n, p)         # variância = n·p·(1−p)
-binom.std(n, p)         # desvio padrão
-```
+### 4.8. Teste F de Snedecor para 2 Variâncias
+* **Hipóteses**: `Ho: sigma1^2 = sigma2^2` vs `Ha: sigma1^2 <> sigma2^2`
+* **Regra Prática**: Colocar sempre a maior variância amostral no numerador (`s1^2 > s2^2`) para facilitar a consulta na tabela (assim `F_cal >= 1`).
+* **Graus de Liberdade**: `df1 = n1 - 1` (numerador) e `df2 = n2 - 1` (denominador).
+* **Fórmula**:
+  `F_cal = s1^2 / s2^2`
 
----
-
-## Aula 7: Distribuição de Poisson
-
-**O que é:**  
-Modelo para o **número de eventos** que ocorrem em um intervalo fixo de tempo (ou espaço), quando os eventos acontecem de forma independente e com taxa média constante **μ** (ou λ).
-
-**Quando usar:**  
-- Número de chamadas por hora  
-- Acidentes por dia  
-- Erros de digitação por página  
-
-**Parâmetro:** `mu` = taxa média de ocorrências no intervalo.
-
-```python
-from scipy.stats import poisson
-
-mu = 4
-
-poisson.pmf(2, mu)      # P(X = 2)  — exatamente 2 eventos
-poisson.cdf(2, mu)      # P(X ≤ 2)  — até 2 eventos
-poisson.sf(2, mu)       # P(X > 2)  — mais de 2
-poisson.mean(mu)        # média = μ
-poisson.var(mu)         # variância = μ (igual à média!)
-poisson.std(mu)
-```
-
-**Relação com a Exponencial:**  
-Se o número de eventos segue Poisson, o **tempo entre eventos** segue Exponencial.
-
----
-
-## Aula 8: Series e DataFrames (Pandas)
-
-### Criação
-
-```python
-# Series (1 dimensão rotulada)
-s = pd.Series([40, 55, 30, 70, 65], index=["Seg", "Ter", "Qua", "Qui", "Sex"])
-s["Ter"]   # 55
-
-# DataFrame (tabela)
-df = pd.DataFrame({
-    "Nome": ["Ana", "Bruno", "Carlos"],
-    "Idade": [23, 35, 29],
-    "Salario": [4500, 7200, 5100]
-})
-```
-
-### Leitura e Inspeção
-
-```python
-df = pd.read_csv("arquivo.csv", encoding="latin-1")  # encoding comum em PT
-
-df.shape                  # Mostra o número de linhas e colunas
-df.head()                 # Mostra as 5 primeiras linhas
-df.info()                 # Mostra informações gerais sobre o DataFrame
-df.describe()             # Mostra estatísticas descritivas das colunas numéricas
-df.columns                # Mostra os nomes das colunas
-df.dtypes                 # Mostra o tipo de dado de cada coluna
-df["Coluna"].unique()     # Mostra os valores únicos da coluna
-df["Coluna"].value_counts() # Conta quantas vezes cada valor aparece
-df.isnull().sum()         # Conta os valores ausentes (NaN) em cada coluna
-df.rename(columns={'Close': 'Close TSLA'}, inplace=True)
-
-```
-
-### Seleção: `loc` × `iloc`
-
-| Método | Busca por | Exemplo |
-|--------|-----------|---------|
-| `df["Coluna"]` | nome da coluna | retorna Series |
-| `df[["A","B"]]` | lista de colunas | retorna DataFrame |
-| `.loc[linhas, colunas]` | **rótulos** (nomes) | `df.loc[0:2, ["Idade","Salario"]]` |
-| `.iloc[linhas, colunas]` | **posição inteira** | `df.iloc[0:3, 1:3]` |
-
-
-```python
-# pega linhas 1 e 5 pelo índice númérico, com todas as colunas
-print(df.iloc[[0,4]])
-
-
-#pega linhas 1 e 5 só com as duas primeiras colunas
-print(df.iloc[[0,4], [0,1]])
-
-
-# a mesma coisa do que em cima, só que com os índices como strings
-df.loc[['Item-1', 'Item-5'],['Comprimento', 'Largura']]
-
-```
-
-### Filtros Booleanos (muito cobrado)
-
-**Regras de ouro:**
-1. Use `&` (E), `|` (OU), `~` (NÃO) — nunca `and`/`or`.
-2. Cada condição **entre parênteses**.
-
-```python
-# Filtro simples
-df[df["Idade"] >= 18]
-# Filtro + coluna específica
-dataset_titanic[dataset_titanic['sex'] =='female']['age'].median()
-df[['Comprimento', 'Largura']].head() #duas colunas, mas sem loc
-
-# E / OU
-df[(df["Operador"] == "Op-1") & (df["Comprimento"] > 105)]
-df[(df["Comprimento"] >= 110) | (df["Largura"] >= 53)]
-
-# Pertence / não pertence a lista
-df[df["Regiao"].isin(["Europa", "Africa"])]
-df[~df["Regiao"].isin(["Asia"])]
-```
-
-### Manipulação
-
-```python
-df["Volume"] = df["Comp"] * df["Larg"] * df["Alt"]   # nova coluna
-df = df.drop("Volume", axis=1)                       # remove coluna
-df = df.drop(0, axis=0)                              # remove linha
-df.sort_values(by="Salario", ascending=False)
-filtro = df['LanguageHaveWorkedWith'].str.contains('palavra aqui'), na=False) 
-```
+### 4.9. ANOVA (Análise de Variância) para 3 ou Mais Médias
+* **Motivação**: Comparar 3 ou mais grupos simultaneamente. Fazer múltiplos testes t individuais inflaria a taxa de Erro Tipo I. Por exemplo, 6 testes t individuais a 95% de confiança reduziriam a confiança global para apenas `0.95^6 = 73.5%` (1 erro a cada 4 testes!).
+* **Hipóteses**: 
+  * `Ho: mu1 = mu2 = mu3 = ... = muk`
+  * `Ha: Ao menos uma das médias é diferente das outras`
+* **Lógica**: Compara a variabilidade **entre grupos** (externa) com a variabilidade **dentro dos grupos** (interna).
+* **Graus de Liberdade**:
+  * Externa (Numerador): `df_ext = k - 1`  *(k = número de grupos)*
+  * Interna (Denominador): `df_int = N - k`  *(N = total geral de observações)*
+  * Total: `df_total = N - 1`
+* **Fórmula da Estatística F**:
+  `MSQ_externa = SQ_externa / df_ext`
+  `MSQ_interna = SQ_interna / df_int`
+  `F_cal = MSQ_externa / MSQ_interna`
 
 ---
 
-## Aula 9: Gráfico de Pizza, Barras e Área
+## 5. Checklist de Decisão Rápida para a Prova
 
-### Pizza (`plt.pie`)
+Para saber qual teste aplicar na questão da prova, faça estas 3 perguntas:
 
-Ideal para **proporções** de um todo.
+1. **Qual é o parâmetro?**
+   * **Média**: Teste Z, Teste t, t Pareado ou ANOVA.
+   * **Proporção**: Teste Z de 1 ou 2 Proporções.
+   * **Variância**: Chi-Quadrado ou Teste F.
 
-```python
-labels = ["Confirmados", "Prováveis", "Suspeitos"]
-sizes  = [3351, 453, 200]
+2. **Quantos grupos estão sendo comparados?**
+   * **1 Grupo**: Z de 1 amostra, t de 1 amostra, 1 Proporção, Chi-Quadrado de 1 variância.
+   * **2 Grupos**: Z de 2 amostras, t de 2 amostras (independentes ou pareadas), 2 Proporções, F de 2 variâncias.
+   * **3 ou mais Grupos**: ANOVA.
 
-plt.pie(sizes, labels=labels, autopct="%1.1f%%", startangle=90)
-plt.axis("equal")
-plt.show()
-```
+3. **O desvio padrão populacional (sigma) é conhecido ou amostral (s)? A amostra é grande (n >= 30)?**
+   * Se `sigma` for conhecido OU `n >= 30` -> Usar **Distribuição Z**.
+   * Se `sigma` for desconhecido E `n < 30` -> Usar **Distribuição t de Student** (`df = n - 1`).
 
-### Barras — várias formas de fazer o mesmo gráfico
 
-```python
-# 1) Matplotlib / Pandas
-df.plot(kind="bar", x="Categoria", y="Valores")
+Oq falta:
 
-# 2) Barras horizontais
-df.plot(kind="barh", x="Pais", y="PIB")
+explicar o equal_var no ttest_ind
+(variâncias uiguais ou difewrentes)
 
-# 3) Seaborn (melhor quando tem hue)
-sns.barplot(data=df, x="Tipo", y="Mortes", hue="Pais", errorbar=None)
 
-#com countplot
-sns.countplot(x='class', hue='alive', data=df)
-
-dados = np.random.randint(1,7,6000)
-sns.countplot(x=dados)
-```
-| Gráfico | Para que serve? | Eixos necessários | O que o Eixo Y representa por padrão? |
-| :--- | :--- | :--- | :--- |
-| **`sns.barplot`** | Compara categorias com um valor numérico | `x` (Categoria) e `y` (Número) | Média/Agregação de um valor da base |
-| **`sns.countplot`** | Conta quantas vezes cada categoria aparece | Apenas `x` (ou apenas `y`) | Frequência/Quantidade de linhas (`count`) |
-
-**Empilhada a partir de crosstab:**
-
-```python
-#região no x, ano no y
-tabela = pd.crosstab(df["Regiao"], df["Ano"], values=df["Total"], aggfunc="sum")
-tabela.plot(kind="bar", stacked=True)
-
-
-#o hue vai ser o ano o eixo x vai ser a rtegião e o y vai ser a soma
-df3 = pd.crosstab(
-                df2['Region_of_Incident'],
-                  df2['Reported_Year'], 
-                    values=df2['Total_Dead_and_Missing'],
-                    aggfunc='sum'
-                  )
-
-df3.plot(kind='bar', stacked=False)
-
-```
-
-### Área Empilhada (`kind="area"`)
-
-Mostra magnitude cumulativa ao longo do tempo.
-
-```python
-df.set_index("Ano")[["Roubo", "Homicidio", "Furto"]].plot(kind="area", stacked=True)
-summary.plot(kind='area', stacked=True)
-
-#ano no eixo x, qtd crime no y e as taxas empilhadas (sendo que cada cor vai representar um crime)
-summary = pd.crosstab(df['Year'], df['Crime'], values=df['Rate'], aggfunc=np.sum)
-summary.plot(kind='area', stacked=True)
-
-
-```
-
-
-### Setar ìndice
-
-Agora a coluna Country pode ser usada como índice
-```python
-df_gdp.set_index('Country', inplace=True)
-```
-
-
-
-
----
-
-## Aula 10: Linhas, Histogramas e Barras (Seaborn)
-
-### Linhas — duas formas
-
-```python
-# Matplotlib / Pandas
-df.plot(kind="line", x="Ano", y=["PIB_Brasil", "PIB_Argentina"])
-
-# Seaborn (suporta hue facilmente)
-sns.lineplot(data=df, x="Ano", y="Taxa_Crime", hue="Categoria")
-```
-
-### Dispersão + Regressão
-
-```python
-#fit_reg é a opção da reta
-sns.regplot(data=df, x="Idade", y="Pressao_Arterial", scatter_kws={"alpha": 0.6}, fit_reg=True)
-```
-
-### Histograma: `histplot` × `displot`
-
-| Função | O que faz | Quando usar |
-|--------|-----------|-------------|
-| `sns.histplot` | Histograma (pode adicionar KDE) | Dentro de `subplot` ou quando você já tem `ax` |
-| `sns.displot` | Figura completa de distribuição | Gráfico único e rápido; cria sua própria figura |
-
-```python
-# com .hist
-df.hist('age', bins=8,figsize=(8,8))
-
-# histplot (mais controle)
-sns.histplot(df["CPI"], bins=15, kde=True)
-
-# displot (atalho para figura inteira)
-sns.displot(df["CPI"], bins=15, kde=True)
-```
-
-**Dois histogramas lado a lado (padrão de prova):**
-
-```python
-fig, axes = plt.subplots(1, 2, figsize=(12, 5))
-sns.histplot(df[df["Regiao"]=="Europe"]["CPI"], bins=15, kde=True, ax=axes[0])
-sns.histplot(df[df["Regiao"]=="Africa"]["CPI"], bins=15, kde=True, ax=axes[1])
-plt.tight_layout()
-
-#USANDO O SUPLOT SEPARADO
-plt.subplot(1,2,1)
-plt.pie(sizes_sierra, labels=labels_sierra,autopct='%1.1f%%', shadow=True, startangle=90)
-plt.title('Pie chart of Ebola deaths in Sierra Leone')
-
-plt.subplot(1,2,2)
-plt.pie(sizes_guinea, labels=labels_guinea,autopct='%1.1f%%', shadow=True, startangle=90)
-plt.title('Pie chart of Ebola deaths in Guinea')
-
-plt.tight_layout()
-plt.show()
-
-```
-
----
-
-## Aula 11: Crosstab e Groupby Avançado
-
-### O que é `crosstab`?
-
-Tabela de frequência (ou agregação) entre duas ou mais variáveis categóricas.  
-Responde: “Quantas vezes a categoria A aparece junto com a categoria B?”
-
-```python
-pd.crosstab(
-    index,                # o que vai nas linhas
-    columns,              # o que vai nas colunas
-    values=None,          # coluna numérica (opcional)
-    aggfunc=None,         # 'mean', 'sum', 'count'... (obrigatório se values)
-    margins=False,        # adiciona totais
-    normalize=False       # False | 'all' | 'index' | 'columns'
-)
-```
-
-**Exemplos essenciais:**
-
-```python
-# Contagem simples
-ct = pd.crosstab(df["gender"], df["education_level"])
-
-# Média de uma variável numérica
-ct_mean = pd.crosstab(df["gender"], df["education_level"],
-                      values=df["score"], aggfunc="mean")
-
-# Com totais
-ct = pd.crosstab(df["gender"], df["education_level"], margins=True)
-
-# agrupe por ano os crimes,  olhando taxas somadas
-summary = pd.crosstab(df['Year'], df['Crime'], values=df['Rate'], aggfunc=np.sum)
-
-# Normalização
-pd.crosstab(..., normalize="index")   # % dentro de cada linha
-pd.crosstab(..., normalize="columns") # % dentro de cada coluna
-pd.crosstab(..., normalize="all")     # % do total geral
-pd.crosstab(..., normalize=True) 
-
-#nomear índices
-pd.crosstab(df['pickup_borough'], df['payment'], rownames=['Zone'], colnames=['Payment Method'] )
-```
-
-**Heatmap (melhor visualização de crosstab):**
-
-```python
-#annot é para colocar todas as informações
-sns.heatmap(ct, annot=True, cmap="coolwarm", fmt="g")
-```
-
-**Barras a partir do crosstab:**
-
-```python
-ct.plot(kind="bar")           # agrupadas
-ct.plot(kind="bar", stacked=True)  # empilhadas
-```
-
-### Groupby — o que é e como usar
-
-`groupby` **parte** o DataFrame por chaves e calcula agregações em cada grupo.
-
-```python
-# Média de uma coluna
-df.groupby("Company")[["Sales"]].mean()
-
-# Várias funções
-df.groupby("Company")["Sales"].agg(["mean", "sum", "count", "std"])
-
-# Funções diferentes por coluna
-df.groupby("Company").agg({"Sales": ["mean", "sum"], "Score": "max"})
-
-# Múltiplas chaves
-df.groupby(["day", "sex"])["total_bill"].mean()
-```
-
-**Regra de ouro para plotar com Seaborn:**  
-Sempre use `.reset_index()` para transformar o resultado de volta em DataFrame com colunas normais.
-
-```python
-df_agrupado = df.groupby(["day", "sex"])["total_bill"].mean().reset_index()
-sns.barplot(data=df_agrupado, x="day", y="total_bill", hue="sex")
-```
-
----
-
-## Aula 12: Distribuição Normal
-
-**O que é:**  
-Distribuição **contínua** em forma de sino, simétrica em torno da média **μ**. O desvio padrão **σ** controla a largura.
-
-**Quando usar:**  
-- Alturas, pesos, notas padronizadas  
-- Erros de medição  
-- Qualquer variável que seja soma de muitos fatores independentes (Teorema Central do Limite)
-
-**Área sob a curva = probabilidade.**  
-Como é contínua, P(X = valor exato) = 0. Trabalhamos sempre com intervalos.
-
-```python
-from scipy.stats import norm
-
-mu, sigma = 0, 1   # normal padrão
-
-norm.pdf(0, mu, sigma)     # densidade no ponto 0
-norm.cdf(1.96, mu, sigma)  # P(X ≤ 1.96) ≈ 0.975
-norm.sf(1.96, mu, sigma)   # P(X > 1.96)
-norm.mean(mu, sigma)
-norm.std(mu, sigma)
-```
-
-**Regra empírica (muito cobrada):**  
-- ≈ 68 % dos dados entre μ − σ e μ + σ  
-- ≈ 95 % entre μ − 2σ e μ + 2σ  
-- ≈ 99,7 % entre μ − 3σ e μ + 3σ
-
----
-
-## Aula 13: Distribuição Exponencial
-
-**O que é:**  
-Distribuição **contínua** que modela o **tempo de espera** até o próximo evento, quando os eventos seguem um processo de Poisson.
-
-**Quando usar:**  
-- Tempo entre chegadas de clientes  
-- Tempo até a próxima falha de um equipamento  
-- Tempo de vida de componentes eletrônicos  
-
-**Parâmetro:** `scale` = 1/λ (onde λ é a taxa). No `scipy`, o parâmetro principal é `scale`.
-
-```python
-from scipy.stats import expon
-
-# scale = 1/λ  (ex.: se λ = 2 eventos/hora, scale = 0.5)
-expon.pdf(1, scale=0.5)    # densidade
-expon.cdf(1, scale=0.5)    # P(X ≤ 1)
-expon.sf(1, scale=0.5)     # P(X > 1)
-expon.mean(scale=0.5)      # média = scale
-expon.std(scale=0.5)
-```
-
-**Relação com Poisson:**  
-Se o número de eventos em um intervalo é Poisson(μ), o tempo entre eventos é Exponencial com média 1/μ.
-
----
-
-## Pegadinhas e Erros Mais Comuns
-
-| Erro | Forma errada | Forma correta |
-|------|--------------|---------------|
-| `and` / `or` em filtro | `df[df.A>5 and df.B<2]` | `df[(df.A>5) & (df.B<2)]` |
-| Esquecer parênteses | `df[df.A>5 & df.B<2]` | `df[(df.A>5) & (df.B<2)]` |
-| `values` sem `aggfunc` | `pd.crosstab(x,y,values=z)` | `pd.crosstab(x,y,values=z,aggfunc="mean")` |
-| Esquecer `.reset_index()` | `sns.barplot(df.groupby(...).mean())` | `...mean().reset_index()` |
-| `annot=True` no heatmap | `sns.heatmap(ct)` | `sns.heatmap(ct, annot=True, fmt="g")` |
-| Normalização errada | achar que `normalize=True` é por linha | `normalize="index"` (linha) ou `"columns"` |
-| `loc` × `iloc` | `df.loc[0:2]` querendo posição | `df.iloc[0:2]` |
-| Subtítulo do boxplot | não limpar | `plt.suptitle("")` |
-| Filtrar dentro do boxplot | `df.boxplot(..., filtro)` | filtrar o DataFrame **antes** |
-
----
-
-### Dicas finais de prova
-
-- Filtro clássico: `df[(df["Op"]=="Op-1") & (df["Comp"]>105)]`
-- Boxplot com filtro: `df[df["genre"].isin([...])].boxplot(column="score", by="genre"); plt.suptitle("")`
-- Quartis: `st.quantiles(df["col"])` → `[Q1, Q2, Q3]`
-- Crosstab completo: `pd.crosstab(..., values=..., aggfunc="mean", margins=True)`
-- Groupby + Seaborn: sempre `.reset_index()`
-- Heatmap: `annot=True, fmt="g"`
-
-Boa prova! 🚀
+para saber isso, 
